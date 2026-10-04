@@ -56,21 +56,18 @@ func Ask(ctx context.Context, to *PID, message proto.Message, timeout time.Durat
 	select {
 	case response = <-responseCh:
 		timers.Put(timer)
-		receiveContext.responseClosed.Store(true)
 		putResponseChannel(responseCh)
 		return
 	case <-ctx.Done():
 		err = errors.Join(ctx.Err(), gerrors.ErrRequestTimeout)
 		to.handleReceivedErrorWithMessage(noSender, message, err)
 		timers.Put(timer)
-		receiveContext.responseClosed.Store(true)
 		putResponseChannel(responseCh)
 		return nil, err
 	case <-timer.C:
 		err = gerrors.ErrRequestTimeout
 		to.handleReceivedErrorWithMessage(noSender, message, err)
 		timers.Put(timer)
-		receiveContext.responseClosed.Store(true)
 		putResponseChannel(responseCh)
 		return
 	}

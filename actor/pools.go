@@ -78,31 +78,13 @@ func releaseContext(receiveContext *ReceiveContext) {
 	}
 }
 
+// getResponseChannel returns a fresh reply channel per Ask (as goakt v4.5.0):
+// a late reply lands in an unreachable channel, never in a reused one.
 func getResponseChannel() chan proto.Message {
-	select {
-	case ch := <-responseCh:
-		return ch
-	default:
-		return make(chan proto.Message, 1)
-	}
+	return make(chan proto.Message, 1)
 }
 
-func putResponseChannel(ch chan proto.Message) {
-	// Drain any stale response (e.g. from a timed-out Ask where the actor
-	// replied after the caller gave up).
-	for {
-		select {
-		case <-ch:
-			continue
-		default:
-		}
-		break
-	}
-	select {
-	case responseCh <- ch:
-	default:
-	}
-}
+func putResponseChannel(chan proto.Message) {}
 
 func getErrorChannel() chan error {
 	select {
